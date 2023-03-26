@@ -112,8 +112,6 @@ def rescalePath(paths, path_idx, img, scale, pxlPerMeter):
     return [np.round(x*scale) for x in path_x], [np.round(y*scale) for y in path_y], newImg, pxlPerMeter*scale 
 
 
-
-
 normalise_angle = lambda angle: atan2(sin(angle), cos(angle))
 
 
@@ -336,7 +334,6 @@ class Vehicle:
         trueCarPos.append(tuple((self.x,  self.y)))
 
 
-# '''drive without visualisation'''
 def rangeSensor(currentPos, landmarks, angleRange, maxDist):
     lndMrkRange = []
     for (x,y) in landmarks:
