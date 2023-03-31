@@ -121,10 +121,21 @@ def hierarchicalNetwork2DGridNowrapNet(prev_weights, net,N, vel, direction, iter
     wrap=0   
     return prev_weights, wrap, x_grid_expect, y_grid_expect
 
-def headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,savePath, printing=False, N=100, returnTypes=None):
+
+def headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath, printing=False, N=100, returnTypes=None, genome=None):
     global theata_called_iters,theta_weights, prev_weights, q, wrap_counter, current_i, x_grid_expect, y_grid_expect 
 
-    num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=10,2,1.10262708e-01,6.51431074e-04,3,2 #with decimals 200 iters fitness -395 modified
+    if genome is not None: 
+        num_links=int(genome[0]) #int
+        excite=int(genome[1]) #int
+        activity_mag=genome[2] #uni
+        inhibit_scale=genome[3] #uni
+        iterations=int(genome[4])
+        wrap_iterations=int(genome[5])
+     
+    else:
+        num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=10,2,1.10262708e-01,6.51431074e-04,3,2 #with decimals 200 iters fitness -395 modified
+
     network=attractorNetwork2D(N,N,num_links,excite, activity_mag,inhibit_scale)
 
     
@@ -152,7 +163,7 @@ def headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,savePath, pr
     
 
     '''_______________________________Iterating through simulation velocities_______________________________'''
-    for i in range(1,test_length):   
+    for i in range(1,len(vel)):   
         '''Path integration'''
         q[2]+=angVel[i]
         q[0],q[1]=q[0]+vel[i]*np.cos(q[2]), q[1]+vel[i]*np.sin(q[2])
@@ -207,7 +218,7 @@ def headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,savePath, pr
     if savePath != None:
         np.save(savePath, np.array([x_grid, y_grid, x_integ, y_integ, x_integ_err, y_integ_err]))
     
-    print(f'CAN error: {errorTwoCoordinateLists(x_integ,y_integ, x_grid, y_grid)}') 
+    # print(f'CAN error: {errorTwoCoordinateLists(x_integ,y_integ, x_grid, y_grid)}') 
         
     
 
@@ -372,7 +383,7 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
             # vel=np.concatenate([np.linspace(0,scales[0]*5,iterPerScale), np.linspace(scales[0]*5,scales[1]*5,iterPerScale), np.linspace(scales[1]*5,scales[2]*5,iterPerScale), np.linspace(scales[2]*5,scales[3]*5,iterPerScale)])
             np.random.seed(index*randomSeedVariation)
             vel=np.random.uniform(0,20,test_length) 
-            headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,pathfile+f'{index}.npy', printing=False)
+            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', printing=False)
     
     if plotting==True:
         fig, axs = plt.subplots(figrows,figcols,figsize=(4, 4))
@@ -436,11 +447,11 @@ def mutliVs_single(filepath, index, desiredTestLength, run=False, plotting=False
             true_x,true_y=pathIntegration(vel,angVel)
 
             scales=[1]
-            single_x,single_y=headDirectionAndPlaceNoWrapNet(scales,test_length, vel, angVel,None,plot=False, printing=False)
+            single_x,single_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None,plot=False, printing=False)
             singleError=errorTwoCoordinateLists(true_x,true_y, single_x, single_y)
 
             scales=[0.25,1,4,16]
-            multi_x,multi_y=headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,None,plot=False, printing=False)
+            multi_x,multi_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None,plot=False, printing=False)
             multipleError=errorTwoCoordinateLists(true_x,true_y, multi_x, multi_y)
 
             errors.append([singleError,multipleError])
@@ -479,9 +490,9 @@ def CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=Fal
 
     if run==True:
         scales=[1]
-        single_x,single_y=headDirectionAndPlaceNoWrapNet(scales,test_length, vel, angVel,singlePath,plot=False, printing=False)
+        single_x,single_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,singlePath,plot=False, printing=False)
         scales=[0.25,1,4,16]
-        multi_x,multi_y=headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,multiPath,plot=False, printing=False)
+        multi_x,multi_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,multiPath,plot=False, printing=False)
     if plotting==True:
         x_gridM,y_gridM, x_integM, y_integM, x_integ_err, y_integ_err= np.load(multiPath)
         x_gridS,y_gridS, x_integS, y_integS, x_integ_err, y_integ_err= np.load(singlePath)
@@ -597,7 +608,7 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
                 test_length=1000
             test_length=len(vel)
 
-            headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,pathfile+f'{index}.npy', printing=False)
+            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', printing=False)
             print(f'Finished vels {index}')
     
     if plotting==True:
@@ -680,14 +691,14 @@ def scaleAblation(scaleRatios,numScales,randomSeedVariation=5, run=False, plotti
         durations=np.zeros((len(scaleRatios),len(numScales)))
         for i,ratio in enumerate(scaleRatios):
             for j,length in enumerate(numScales):
-                test_length=100
+                test_length=50
                 np.random.seed(randomSeedVariation)
                 vel=np.random.uniform(0,5,test_length) 
                 angVel=np.random.uniform(0,np.pi/6,test_length)
                 scales=generatinScales(ratio, length)
                 
                 t=time.time()
-                errors[i,j]=headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,None, printing=False, returnTypes='Error')
+                errors[i,j]=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, printing=False, returnTypes='Error')
                 durations[i,j]=(time.time()-t)
                 print(f'Finished ratio {ratio} and length {length}')
 
@@ -718,8 +729,7 @@ def scaleAblation(scaleRatios,numScales,randomSeedVariation=5, run=False, plotti
 
         plt.savefig(plotPath)
 
-
-# scaleRatios,numScales=[1,1.2,1.3],[1,2,3,4,5]
+# scaleRatios,numScales=[1,2,3,4,5],[1,2,3,4,5]
 # scaleAblation(scaleRatios,numScales, run=True, plotting=True)
 
 '''Response to Velocity Spikes'''
@@ -754,7 +764,7 @@ def resposneToVelSpikes(randomSeedVariation=5,run=False,plotting=False):
         scales=[0.25,1,4,16]
         
 
-        x_integ,y_integ, x_grid, y_grid=headDirectionAndPlaceNoWrapNet(scales, test_length, vel, angVel,None, returnTypes='posInteg+CAN')
+        x_integ,y_integ, x_grid, y_grid=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, returnTypes='posInteg+CAN')
         vel_CANoutput,angVel_CANoutput=positionToVel2D(x_grid,y_grid)
         np.save(savePath,np.array([vel,vel_CANoutput]))
     
@@ -766,4 +776,4 @@ def resposneToVelSpikes(randomSeedVariation=5,run=False,plotting=False):
         # plt.savefig(plotPath)
         plt.show()
 
-resposneToVelSpikes(randomSeedVariation=5,run=True,plotting=True)
+# resposneToVelSpikes(randomSeedVariation=5,run=True,plotting=True)
