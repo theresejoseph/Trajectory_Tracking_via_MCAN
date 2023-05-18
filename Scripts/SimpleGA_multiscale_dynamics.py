@@ -443,7 +443,7 @@ def runGA1D(run=False, plotting=False):
 
 if __name__ == '__main__':
     freeze_support()
-    runGA1D(run= True, plotting=True)
+    runGA1D(run= False, plotting=True)
 
 
 # filename=f'../results/GA_MultiScale/headDirection_randomInput.npy'

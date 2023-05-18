@@ -26,6 +26,20 @@ plt.style.use(['science','ieee'])
 # plt.style.use(['science','no-latex'])
 
 
+def positionToVel2D(data_x,data_y):
+    vel,angVel=[],[]
+    for i in range(0,len(data_x)):
+        x0=data_x[i-2]
+        x1=data_x[i-1]
+        x2=data_x[i]
+        y0=data_y[i-2]
+        y1=data_y[i-1]
+        y2=data_y[i]
+
+        vel.append(np.sqrt(((x2-x1)**2)+((y2-y1)**2))) #translation
+        angVel.append((math.atan2(y2-y1,x2-x1)) - (math.atan2(y1-y0,x1-x0))) 
+    
+    return np.array(vel),np.array(angVel)
 
 def pathIntegration(speed, angVel):
     q=[0,0,0]
@@ -64,11 +78,14 @@ def scale_selection(input,scales, swap_val=1):
         if input<=scales[0]*swap_val:
             scale_idx=0
 
-        for i in range(len(scales)-2):
+        for i in range(len(scales)-1):
             if input>scales[i]*swap_val and input<=scales[i+1]*swap_val:
                 scale_idx=i+1
         
-        if input>scales[-2]*swap_val:
+        # if input>scales[-2]*swap_val:
+        #     scale_idx=len(scales)-1
+        
+        if input>scales[-1]*swap_val:
             scale_idx=len(scales)-1
 
     return scale_idx
@@ -77,7 +94,7 @@ def headDirection(theta_weights, angVel, init_angle):
     global theata_called_iters
     N=360
     # num_links,excite,activity_mag,inhibit_scale, iterations=16, 17, 2.16818183,  0.0281834545, 2
-    num_links,excite,activity_mag,inhibit_scale, iterations=16, 17, 2.16818183,  0.0381834545, 2
+    # num_links,excite,activity_mag,inhibit_scale, iterations=16, 17, 2.16818183,  0.0381834545, 2
     num_links,excite,activity_mag,inhibit_scale, iterations=13,4,2.70983783e+00,4.84668851e-02,2
     net=attractorNetwork(N,num_links,excite, activity_mag,inhibit_scale)
     
@@ -135,7 +152,7 @@ def headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath, printing=False,
      
     else:
         num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=10,2,1.10262708e-01,6.51431074e-04,3,2 #with decimals 200 iters fitness -395 modified
-
+        # num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=11,8,5.09182735e-01,2.78709739e-04,5,2
     network=attractorNetwork2D(N,N,num_links,excite, activity_mag,inhibit_scale)
 
     
@@ -170,20 +187,6 @@ def headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath, printing=False,
         x_integ.append(q[0])
         y_integ.append(q[1])
 
-        '''Dynamic network tuning'''
-        # swap_val=5
-        # if vel[i]<=scales[0]*swap_val:
-        #     num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=3,5,0.015,0.000865888565,1,1 #0.25 scale input, np.random.uniform(0,1,1) error
-        #     network=attractorNetwork2D(N,N,num_links,excite, activity_mag,inhibit_scale)
-        # elif vel[i]>scales[0]*swap_val and vel[i]<=scales[1]*swap_val:
-        #     num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=3,5,0.04,0.000865888565,1,1 #1 scale input, np.random.uniform(1,2,1) error
-        #     network=attractorNetwork2D(N,N,num_links,excite, activity_mag,inhibit_scale)
-        # elif vel[i]>scales[1]*swap_val and vel[i]<=scales[2]*swap_val:
-        #     num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=3,5,0.05,0.000665888565,1,1 #4 scale input, np.random.uniform(2,10,1) error
-        #     network=attractorNetwork2D(N,N,num_links,excite, activity_mag,inhibit_scale)
-        # elif vel[i]>scales[2]*swap_val:
-        #     num_links,excite,activity_mag,inhibit_scale, iterations, wrap_iterations=3,5,0.05,0.000565888565,1,1 #16 scale input, np.random.uniform(10,20,1) error
-        #     network=attractorNetwork2D(N,N,num_links,excite, activity_mag,inhibit_scale)   
 
         '''Mutliscale CAN update'''
         N_dir=360
@@ -218,7 +221,7 @@ def headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath, printing=False,
     if savePath != None:
         np.save(savePath, np.array([x_grid, y_grid, x_integ, y_integ, x_integ_err, y_integ_err]))
     
-    # print(f'CAN error: {errorTwoCoordinateLists(x_integ,y_integ, x_grid, y_grid)}') 
+    print(f'CAN error: {errorTwoCoordinateLists(x_integ,y_integ, x_grid, y_grid)}') 
         
     
 
@@ -681,10 +684,10 @@ def scaleAblation(scaleRatios,numScales,randomSeedVariation=5, run=False, plotti
     # pathfile=f'./Results/RandomData/Ablation_Experiment_Output_SmallerVelRange/TestingRandomInputs_'
     # plotPath=f'./Results/RandomData/AblationofScales_ErrorsandDurations_SmallerVelRange.png'
 
-    savePath1=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/AblationOfScalesErrors_smallerRange.npy'
-    savePath2=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/AblationOfScalesDurations_smallerRange.npy'
-    pathfile=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/TestingRandomInputs_'
-    plotPath=f'./Results/RandomData/AblationofScales_ErrorsandDurations_FineGrain_SmallerVelRange.png'
+    savePath1=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/AblationOfScalesErrors_smallerRange2.npy'
+    savePath2=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/AblationOfScalesDurations_smallerRange2.npy'
+    pathfile=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/TestingRandomInputs2_'
+    plotPath=f'./Results/RandomData/Ablation_Experiment_Output_FineGrain/AblationofScales_ErrorsandDurations_FineGrain_SmallerVelRange2.png'
 
     if run==True:
         errors=np.zeros((len(scaleRatios),len(numScales)))
@@ -693,13 +696,19 @@ def scaleAblation(scaleRatios,numScales,randomSeedVariation=5, run=False, plotti
             for j,length in enumerate(numScales):
                 test_length=50
                 np.random.seed(randomSeedVariation)
-                vel=np.random.uniform(0,5,test_length) 
+                vel=np.random.uniform(0,2,test_length) 
                 angVel=np.random.uniform(0,np.pi/6,test_length)
                 scales=generatinScales(ratio, length)
                 
-                t=time.time()
-                errors[i,j]=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, printing=False, returnTypes='Error')
-                durations[i,j]=(time.time()-t)
+                # t=time.time()
+                # errors[i,j]=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, printing=False, returnTypes='Error')
+                # durations[i,j]=(time.time()-t)
+
+                x_integ,y_integ, x_grid, y_grid=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, returnTypes='posInteg+CAN')
+                vel_CANoutput,angVel_CANoutput=positionToVel2D(x_grid,y_grid)
+                vel_GT,angVel_GT=positionToVel2D(x_integ,y_integ)
+                errors[i,j]=np.sum(abs(vel_CANoutput-vel_GT))
+
                 print(f'Finished ratio {ratio} and length {length}')
 
         np.save(savePath1,errors)
@@ -709,7 +718,7 @@ def scaleAblation(scaleRatios,numScales,randomSeedVariation=5, run=False, plotti
         errors=np.load(savePath1)
         durations=np.load(savePath2)
 
-        fig, ax0=plt.subplots(figsize=(10, 7), ncols=1)
+        fig, ax0=plt.subplots(figsize=(5, 4), ncols=1)
         
         pos= ax0.imshow(errors)
         plt.colorbar(pos,ax=ax0)
@@ -729,51 +738,54 @@ def scaleAblation(scaleRatios,numScales,randomSeedVariation=5, run=False, plotti
 
         plt.savefig(plotPath)
 
-# scaleRatios,numScales=[1,2,3,4,5],[1,2,3,4,5]
+# scaleRatios,numScales=[1, 1.5, 2, 2.5, 3, 3.5, 4],[1,2,3,4,5]
 # scaleAblation(scaleRatios,numScales, run=True, plotting=True)
 
 '''Response to Velocity Spikes'''
-def positionToVel2D(data_x,data_y):
-    vel,angVel=[],[]
-    for i in range(1,len(data_x)):
-        x0=data_x[i-2]
-        x1=data_x[i-1]
-        x2=data_x[i]
-        y0=data_y[i-2]
-        y1=data_y[i-1]
-        y2=data_y[i]
-
-        vel.append(np.sqrt(((x2-x1)**2)+((y2-y1)**2))) #translation
-        angVel.append((math.atan2(y2-y1,x2-x1)) - (math.atan2(y1-y0,x1-x0))) 
-    
-    return vel,angVel
-
-
 def resposneToVelSpikes(randomSeedVariation=5,run=False,plotting=False):
     savePath=f'./Results/RandomData/VelSpikes_Experiment_Output/Integrated+CAN_velsWithSpikes.npy'
-    plotPath=f'./Results/RandomData/Integrated+CAN_velsWithSpikes.png'
+    savePath2=f'./Results/RandomData/VelSpikes_Experiment_Output/CANoutput_velsWithSpikes.npy'
+    plotPath=f'./Results/RandomData/MCAN_path_kidnappedAgent_1uni_Tun0.png'
     if run==True:
         test_length=100
         np.random.seed(randomSeedVariation)
         vel=np.random.uniform(0,1,test_length) 
-        for i in range(0,test_length,test_length//3):
-            vel[i-2]=5
-            vel[i-1]=10
-            vel[i]=20
-        angVel=np.random.uniform(0,np.pi/6,test_length)
+        # for i in range(20,test_length,test_length//3):
+        #     vel[i-3]=5
+        #     vel[i-2]=10
+        #     vel[i-1]=15
+        #     vel[i]=20
+        vel[test_length-10:]=np.random.uniform(10,12,10) 
+        angVel=np.random.uniform(-np.pi/6,np.pi/6,test_length)
         scales=[0.25,1,4,16]
         
 
-        x_integ,y_integ, x_grid, y_grid=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, returnTypes='posInteg+CAN')
+        x_integ,y_integ, x_grid, y_grid=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath2, returnTypes='posInteg+CAN')
         vel_CANoutput,angVel_CANoutput=positionToVel2D(x_grid,y_grid)
-        np.save(savePath,np.array([vel,vel_CANoutput]))
+
+        # np.save(savePath,np.array([vel,vel_CANoutput]))
     
-    if plotting==True:
+    if plotting=='Vel':
         vel,vel_CANoutput=np.load(savePath, allow_pickle=True)
         fig, ax0=plt.subplots(figsize=(4, 4), ncols=1)
-        ax0.plot(vel,'g.-')
-        ax0.plot(vel_CANoutput,'m.-')
-        # plt.savefig(plotPath)
-        plt.show()
+        l2=ax0.plot(vel,'g.-')
+        l3=ax0.plot(vel_CANoutput,'m.-')
+        ax0.legend(('Ground Truth', 'Multiscale CAN'))
+        ax0.set_title('MCAN integration vs. Ground Truth Velocity Profile ')
+        ax0.set_ylabel('Velocity')
+        ax0.set_xlabel('Time')
+        plt.savefig(plotPath)
+        # plt.show()
+    
+    if plotting=='Position':
+        x_grid,y_grid,x_integ, y_integ,x_integ_err, y_integ_err = np.load(savePath2)
+        fig, ax0=plt.subplots(figsize=(4, 4), ncols=1)
+        l2=ax0.plot(x_integ, y_integ,'g.-')
+        l3=ax0.plot(x_grid,y_grid,'m.-')
+        ax0.legend(('Ground Truth', 'Multiscale CAN'))
+        ax0.set_title('MCAN Path for Velocity with Spikes ')
+        ax0.set_ylabel('y[m]')
+        ax0.set_xlabel('x[m]')
+        plt.savefig(plotPath)
 
-# resposneToVelSpikes(randomSeedVariation=5,run=True,plotting=True)
+resposneToVelSpikes(randomSeedVariation=7,run=True,plotting='Position')
