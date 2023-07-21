@@ -487,10 +487,10 @@ def pathIntegration(speed, angVel, startPose):
 
 
 '''Initialising Image'''
-# map_path = './results/TestEnvironmentFiles/TestingMaps/berlin_5kmrad_0.2Line_100pdi.png'
-map_path = './results/TestEnvironmentFiles/TestingMaps/japan_5kmrad_1Line_300pdi.png'
-# map_path = './results/TestEnvironmentFiles/TestingMaps/newyork_5kmrad_1Line_300pdi.png'
-# map_path = './results/TestEnvironmentFiles/TestingMaps/brisbane_5kmrad_1Line_300pdi.png'
+# map_path = './Datasets/CityScaleSimulatorMaps/berlin_5kmrad_0.2Line_100pdi.png'
+map_path = './Datasets/CityScaleSimulatorMaps/japan_5kmrad_1Line_300pdi.png'
+# map_path = './Datasets/CityScaleSimulatorMaps/newyork_5kmrad_1Line_300pdi.png'
+# map_path = './Datasets/CityScaleSimulatorMaps/brisbane_5kmrad_1Line_300pdi.png'
 img=np.array(Image.open(map_path).convert("L"))
 
 meterWidth=5000
@@ -500,18 +500,17 @@ img[img<255]= 0
 img[img==255]=1
 
 
-
-
 '''Generate Paths'''
 # num_locations=20
 # findPathsthroughRandomPoints(img,num_locations)
-pathfile='./results/TestEnvironmentFiles/Paths/japan_5kmrad_300pdi_1line.npy'
+pathfile='./Datasets/CityScaleSimulatorMaps/japan_5kmrad_300pdi_1line.npy'
 findPathsthroughRandomPoints(img,20,pathfile)
 
-pathfile='./results/TestEnvironmentFiles/Paths/newyork_5kmrad_300pdi_1line.npy'
+pathfile='./Datasets/CityScaleSimulatorMaps/newyork_5kmrad_300pdi_1line.npy'
 findPathsthroughRandomPoints(img,20,pathfile)
 
-pathfile='./results/TestEnvironmentFiles/Paths/brisbane_5kmrad_300pdi_1line.npy'
+
+pathfile='./Datasets/CityScaleSimulatorMaps/brisbane_5kmrad_300pdi_1line.npy'
 findPathsthroughRandomPoints(img,20,pathfile)
 
 '''Original'''

@@ -76,16 +76,19 @@ def saveRoadMap(shp_path, savePath, center,n):
 # shp_path ='./data/Geospatial/Berlin/gis_osm_roads_free_1.shp' 
 # savePath='./results/TestEnvironmentFiles/TestingMaps/berlin_5kmrad_1Line_300pdi.png'
 # saveRoadMap(shp_path, savePath, center,5)
+
 '''brisbane'''
 # center = [-27.470125, 153.021072]
 # shp_path ='./data/Geospatial/Brisbane/gis_osm_roads_free_1.shp' 
 # savePath='./results/TestEnvironmentFiles/TestingMaps/brisbane_5kmrad_1Line_300pdi.png'
 # saveRoadMap(shp_path, savePath, center,5)
+
 '''japan'''
 # center = [35.652832,139.839478]
 # shp_path ='./data/Geospatial/Kanto/gis_osm_roads_free_1.shp' 
 # savePath='./results/TestEnvironmentFiles/TestingMaps/japan_5kmrad_1Line_300pdi.png'
 # saveRoadMap(shp_path, savePath, center,5)
+
 '''newyork'''
 # center = [40.730610, -73.935242]
 # shp_path ='./data/Geospatial/NewYork/gis_osm_roads_free_1.shp' 
