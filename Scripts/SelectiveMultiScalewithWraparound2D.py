@@ -64,8 +64,10 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
 
             if scaleType=='Multi':
                 scales=[0.25,1,4,16]
+                numNeurons=100
             elif scaleType=='Single':
                 scales=[1]
+                numNeurons=200
 
             if len(vel)<1000:
                 test_length=len(vel)
@@ -76,7 +78,7 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
             # vel=np.concatenate([np.linspace(0,scales[0]*5,iterPerScale), np.linspace(scales[0]*5,scales[1]*5,iterPerScale), np.linspace(scales[1]*5,scales[2]*5,iterPerScale), np.linspace(scales[2]*5,scales[3]*5,iterPerScale)])
             np.random.seed(index*randomSeedVariation)
             vel=np.random.uniform(0,20,test_length) 
-            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', printing=False)
+            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', N=numNeurons,printing=False)
     
     if plotting==True:
         fig, axs = plt.subplots(figrows,figcols,figsize=(4, 4))
@@ -297,7 +299,7 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
             test_length=len(vel)
 
             headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', printing=False)
-            print(f'Finished vels {index}')
+            # print(f'Finished vels {index}')
     
     if plotting==True:
         fig, axs = plt.subplots(4,3,figsize=(4, 4))
@@ -322,8 +324,8 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
         fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="lower center", ncol=2)
         plt.savefig(savepath)
 
-# runningAllPathsFromKittiGT(11, 'Multi', run=True, plotting=True)
-# runningAllPathsFromKittiGT(11, 'Single', run=True, plotting=True)
+runningAllPathsFromKittiGT(11, 'Multi', run=True, plotting=True)
+runningAllPathsFromKittiGT(11, 'Single', run=True, plotting=True)
 
 def plotKittiGT_singlevsMulti(index):
     multiPath=f'./Results/Kitti/CAN_Experiment_Output_Multi/TestingTracksfromGTpose_{index}.npy'
