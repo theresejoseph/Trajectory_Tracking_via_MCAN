@@ -3,6 +3,7 @@ import numpy as np
 from CAN import attractorNetwork2D, attractorNetwork, activityDecoding,activityDecodingAngle,headDirectionAndPlaceNoWrapNet
 import matplotlib.pyplot as plt
 import math
+import time 
 import multiprocessing
 from multiprocessing import freeze_support
 from functools import partial
@@ -115,7 +116,7 @@ class GeneticAlgorithm:
         if self.dim=='1D':
             mutate_amount=np.array([int(np.random.uniform(0,1)), int(np.random.uniform(0,1)), np.random.uniform(0,0.05), np.random.uniform(0,0.05), int(np.random.uniform(0,1))]) #head direction
         elif self.dim=='2D':
-            mutate_amount=np.array([int(np.random.uniform(0,1)), int(np.random.uniform(0,1)), np.random.uniform(0,0.01), np.random.uniform(0,0.001), int(np.random.uniform(0,1))]) #atractor grid cell 
+            mutate_amount=np.array([int(np.random.uniform(0,1)), int(np.random.uniform(0,1)), np.random.uniform(0,0.01), np.random.uniform(0,0.0005), int(np.random.uniform(0,1))]) #atractor grid cell 
 
         mutate_prob=np.array([random.random() for i in range(len(genome))])
         mutate_indexs=np.argwhere(mutate_prob<=0.2)
@@ -202,59 +203,24 @@ class GeneticAlgorithm:
 
 
 def runGA(run1D=False, run2D=False, plotting1D=False, plotting2D=False):
-    if run2D==True:
-        filename=f'./Results/GA_Experiment_Output/TuningMultiscale.npy'
-        # mutate_amount=np.array([int(np.random.normal(0,1)), int(np.random.normal(0,1)), np.random.normal(0,0.005), np.random.normal(0,0.00005), int(np.random.normal(0,1)), int(np.random.normal(0,1))])
-        # ranges = [[1,20],[1,20],[0,1],[0.00001, 0.005],[1,5], [1,5]]
-        ranges = [[1,10],[1,10],[0,1],[0,0.005],[1,2]]
-        fitnessFunc=  attractorGridcell_fitness
-        num_gens=20
-        population_size=8
-        scales=[0.25,1,4,16]
-        test_length=50
-        # np.random.seed(5)
-        vels=np.random.uniform(0,5,test_length)
-        dirs=np.arange(0,360, 360//test_length)
-        GeneticAlgorithm(num_gens,population_size,filename,fitnessFunc,ranges,scales, dirs, vels, dim='2D',numProcess=8).implimentGA()
-
-    if plotting2D==True:
-        filename=f'./Results/GA_Experiment_Output/TuningMultiscale.npy'
-        savePath=f'./Results/GA_Experiment_Output/GA_multiscale_Plot.png'
-        with open(filename, 'rb') as f:
-            data = np.load(f)
-        mean_1=np.array([np.mean(fit) for fit in data[:,:,-1]])
-        std_1=np.array([np.std(fit) for fit in data[:,:,-1]])
-
-        x = np.arange(len(mean_1))
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        ax.plot(x, mean_1, color='teal', label='2D Network Tuning with Genetic Algorithm')
-        ax.fill_between(x, mean_1 - std_1, mean_1 + std_1, color='teal', alpha=0.2)
-        ax.set_xlabel('Generation')    
-        ax.set_ylabel('Fitness [-SAD]')
-        ax.set_title('2D Network Tuning')
-        plt.tight_layout()
-        plt.savefig(savePath)
-        print(data[-1,0,:])
-
 
     if run1D==True:
-        filename=f'./Results/RandomData/GA_Experiment_Output/TuningHeadDirection.npy'
+        filename=f'./Results/GA_Experiment_Output/TuningHeadDirection1.npy'
         # mutate_amount=np.array([int(np.random.normal(0,1)), int(np.random.normal(0,1)), np.random.normal(0,0.005), np.random.normal(0,0.00005), int(np.random.normal(0,1)), int(np.random.normal(0,1))])
         ranges =  [[1,20],[1,20],[0.05,4],[0,0.1],[1,2]]
         fitnessFunc=  headDirectionFitness
         num_gens=20
-        population_size=12
+        population_size=24
         scales=[0.25,1,4,16]
         test_length=200
         # np.random.seed(5)
         vels=np.random.uniform(0,5,test_length)
         angVels=np.random.uniform(-45,45, test_length)
 
-        GeneticAlgorithm(num_gens,population_size,filename,fitnessFunc,ranges,scales, angVels, vels, dim='1D', numProcess=4).implimentGA()
+        GeneticAlgorithm(num_gens,population_size,filename,fitnessFunc,ranges,scales, angVels, vels, dim='1D', numProcess=12).implimentGA()
 
     if plotting1D==True:
-        filename=f'./Results/GA_Experiment_Output/TuningHeadDirection.npy'
+        filename=f'./Results/GA_Experiment_Output/TuningHeadDirection1.npy'
         savePath=f'./Results/GA_Experiment_Output/GA_HeadDirection_Plot.png'
         with open(filename, 'rb') as f:
             data = np.load(f)
@@ -272,16 +238,51 @@ def runGA(run1D=False, run2D=False, plotting1D=False, plotting2D=False):
         plt.tight_layout()
         plt.savefig(savePath)
         print(data[-1,0,:])
-        
+
+    if run2D==True:
+        filename=f'./Results/GA_Experiment_Output/TuningMultiscale1.npy'
+        # mutate_amount=np.array([int(np.random.normal(0,1)), int(np.random.normal(0,1)), np.random.normal(0,0.005), np.random.normal(0,0.00005), int(np.random.normal(0,1)), int(np.random.normal(0,1))])
+        # ranges = [[1,20],[1,20],[0,1],[0.00001, 0.005],[1,5], [1,5]]
+        ranges = [[1,10],[1,10],[0,1],[0,0.005],[1,2]]
+        fitnessFunc=  attractorGridcell_fitness
+        num_gens=20
+        population_size=24
+        scales=[0.25,1,4,16]
+        test_length=50
+        # np.random.seed(5)
+        vels=np.random.uniform(0,4,test_length)
+        dirs=np.arange(0,360, 360//test_length)
+        GeneticAlgorithm(num_gens,population_size,filename,fitnessFunc,ranges,scales, dirs, vels, dim='2D',numProcess=12).implimentGA()
+
+    if plotting2D==True:
+        filename=f'./Results/GA_Experiment_Output/TuningMultiscale1.npy'
+        savePath=f'./Results/GA_Experiment_Output/GA_multiscale_Plot.png'
+        with open(filename, 'rb') as f:
+            data = np.load(f)
+        mean_1=np.array([np.mean(fit) for fit in data[:,:,-1]])
+        std_1=np.array([np.std(fit) for fit in data[:,:,-1]])
+
+        x = np.arange(len(mean_1))
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(x, mean_1, color='teal', label='2D Network Tuning with Genetic Algorithm')
+        ax.fill_between(x, mean_1 - std_1, mean_1 + std_1, color='teal', alpha=0.2)
+        ax.set_xlabel('Generation')    
+        ax.set_ylabel('Fitness [-SAD]')
+        ax.set_title('2D Network Tuning')
+        plt.tight_layout()
+        plt.savefig(savePath)
+        print(data[-1,0,:])
+    
 
 def plotAllGA():
-    filename=f'./Results/GA_Experiment_Output/TuningHeadDirection.npy'
+    filename=f'./Results/GA_Experiment_Output/TuningHeadDirection1.npy'
     with open(filename, 'rb') as f:
         data = np.load(f)
     mean_1=np.array([np.mean(fit) for fit in data[:,:,-1]])
     std_1=np.array([np.std(fit) for fit in data[:,:,-1]])
 
-    filename2=f'./Results/GA_Experiment_Output/TuningMultiscale.npy'
+    filename2=f'./Results/GA_Experiment_Output/TuningMultiscale1.npy'
     with open(filename2, 'rb') as f:
         data = np.load(f)
         mean_2=np.array([np.mean(fit) for fit in data[:,:,-1]])
@@ -301,13 +302,23 @@ def plotAllGA():
     ax2.fill_between(x2, mean_2 - std_2, mean_2 + std_2, color='teal', alpha=0.2)
     ax2.set_xlabel('Generations')
     ax2.set_title('2D Network Tuning')
-    plt.savefig('./Results/GA_Experiment_Output/1D_2D_NetworkTuning.png')
+    plt.savefig('./Results/GA_Experiment_Output/1D_2D_NetworkTuning.pdf')
 
 
 if __name__ == '__main__':
     freeze_support()
+
+    # t1=time.time()
+    # runGA(run1D= True, plotting1D=True)
+    # print(f'1D GA duration {time.time()-t1}')
+
+    # t2=time.time()
+    # runGA(run2D= True, plotting2D=True)
+    # print(f'2D GA duration {time.time()-t2}')
+
     plotAllGA()
-    runGA(run2D= False, plotting2D=True)
-    runGA(run1D= False, plotting1D=True)
 
 
+
+#1D GA duration 117.24277806282043
+#2D GA duration 215.77100563049316
