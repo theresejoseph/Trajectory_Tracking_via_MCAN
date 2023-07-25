@@ -79,6 +79,7 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
             np.random.seed(index*randomSeedVariation)
             vel=np.random.uniform(0,20,test_length) 
             headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', N=numNeurons,printing=False)
+            print(f'finished {City}, id {index}')
     
     if plotting==True:
         fig, axs = plt.subplots(figrows,figcols,figsize=(4, 4))
@@ -111,17 +112,17 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
         fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="lower center", ncol=2)
         plt.savefig(savepath)
 
-# scaleType='Single'
-# runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
-# runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
-# runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
-# runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+scaleType='Single'
+runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
+runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
+runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
+runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
 
-# scaleType='Multi'
-# runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
-# runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
-# runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
-# runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+scaleType='Multi'
+runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
+runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
+runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
+runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
 
 
 ''' Multi versus Single over Large Velocity Range'''
@@ -289,8 +290,10 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
 
             if scaleType=='Multi':
                 scales=[0.25,1,4,16]
+                numNeurons=100
             elif scaleType=='Single':
                 scales=[1]
+                numNeurons=200
 
             if len(vel)<1000:
                 test_length=len(vel)
@@ -298,8 +301,8 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
                 test_length=1000
             test_length=len(vel)
 
-            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', printing=False)
-            # print(f'Finished vels {index}')
+            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', N=numNeurons,printing=False)
+            print(f'Finished vels {index}')
     
     if plotting==True:
         fig, axs = plt.subplots(4,3,figsize=(4, 4))
@@ -326,6 +329,7 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
 
 runningAllPathsFromKittiGT(11, 'Multi', run=True, plotting=True)
 runningAllPathsFromKittiGT(11, 'Single', run=True, plotting=True)
+
 
 def plotKittiGT_singlevsMulti(index):
     multiPath=f'./Results/Kitti/CAN_Experiment_Output_Multi/TestingTracksfromGTpose_{index}.npy'
