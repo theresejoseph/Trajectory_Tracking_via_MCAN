@@ -181,20 +181,18 @@ def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
 
 
 scaleType='Single'
-runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
-runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
-runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
-runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
-runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
-
+# runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
+# runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
+# runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
+# runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+# runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
 print('')
-
 scaleType='Multi'
-runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
-runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
-runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
-runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
-runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
+# runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
+# runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
+# runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
+# runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+# runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
 
 
 ''' Multi versus Single over Large Velocity Range'''
@@ -215,13 +213,11 @@ def mutliVs_single(filepath, index, desiredTestLength, run=False, plotting=False
             true_x,true_y=pathIntegration(vel,angVel)
 
             scales=[1]
-            single_x,single_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None,plot=False, printing=False)
-            singleError=errorTwoCoordinateLists(true_x,true_y, single_x, single_y)
-
+            singleError=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None, N=200, returnTypes='Error', printing=False)
+            
             scales=[0.25,1,4,16]
-            multi_x,multi_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None,plot=False, printing=False)
-            multipleError=errorTwoCoordinateLists(true_x,true_y, multi_x, multi_y)
-
+            multipleError=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,None,returnTypes='Error', printing=False)
+    
             errors.append([singleError,multipleError])
 
         np.save(filepath, errors)
@@ -240,7 +236,7 @@ def mutliVs_single(filepath, index, desiredTestLength, run=False, plotting=False
 
 # index=0
 # filepath=f'./Results/Berlin/MultivsSingleErrors_Path{index}.npy'
-# mutliVs_single(filepath, index, 500, run=False, plotting=True) 
+# mutliVs_single(filepath, index, 500, run=True, plotting=True) 
 
 
 
@@ -257,9 +253,9 @@ def CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=Fal
 
     if run==True:
         scales=[1]
-        single_x,single_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,singlePath,plot=False, printing=False)
+        headDirectionAndPlaceNoWrapNet(scales, vel, angVel,singlePath, returnTypes='posInteg+CAN', printing=False)
         scales=[0.25,1,4,16]
-        multi_x,multi_y=headDirectionAndPlaceNoWrapNet(scales, vel, angVel,multiPath,plot=False, printing=False)
+        headDirectionAndPlaceNoWrapNet(scales, vel, angVel,multiPath,returnTypes='posInteg+CAN', printing=False)
     if plotting==True:
         x_gridM,y_gridM, x_integM, y_integM, x_integ_err, y_integ_err= np.load(multiPath)
         x_gridS,y_gridS, x_integS, y_integS, x_integ_err, y_integ_err= np.load(singlePath)
@@ -280,7 +276,7 @@ def CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=Fal
 
 # singlePath='./Results/Berlin/CumalativeError_Path1_SingleScale.npy'
 # multiPath='./Results/Berlin/CumalativeError_Path1_MultiScale.npy'
-# CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=True)
+# CumalativeError_SinglevsMulti(singlePath, multiPath, run=True, plotting=True)
 
 
 
@@ -307,7 +303,7 @@ def plotMultiplePathsErrorDistribution():
     axs.legend(['Single-scale', 'Multiscale'],ncol=2,loc='best')
     axs.set_xlabel('Berlin Trajectories',y=0)
     axs.set_ylabel('ATE [m]')
-    # axs.set_ylim([0,12000])
+    axs.set_ylim([0,14000])
     axs.set_title('ATE within 18 Trajectories through Berlin')
     
     savepath=f'./Results/Berlin/LocalSegmentError_AllPaths_SinglevsMulti.png'
@@ -350,11 +346,11 @@ def data_processing(index):
 
 def plotKittiGT_singlevsMulti(index):
     multiPath=f'./Results/Kitti/CAN_Experiment_Output_Multi/TestingTracksfromGTpose_{index}.npy'
-    singlePath=f'./Results/Kitti/CAN_Experiment_Output_Multi/TestingTracksfromGTpose_{index}.npy'
+    singlePath=f'./Results/Kitti/CAN_Experiment_Output_Single/TestingTracksfromGTpose_{index}.npy'
     x_gridM,y_gridM, x_integM, y_integM, x_integ_err, y_integ_err= np.load(multiPath)
     x_gridS,y_gridS, x_integS, y_integS, x_integ_err, y_integ_err= np.load(singlePath)
 
-    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(3.4, 1.9))
+    fig, (ax1, ax2) = plt.subplots(1,2,figsize=(3.4, 1.9))
     fig.suptitle('Multiscale vs. Single Scale Kitti Odometry Path')
     plt.subplots_adjust(bottom=0.2)
     l2,=ax1.plot(x_gridM, y_gridM, 'm-')
@@ -365,10 +361,10 @@ def plotKittiGT_singlevsMulti(index):
     l4,=ax2.plot(x_integS, y_integS, 'g--')
     ax2.axis('equal')
 
-    fig.legend((l2, l3, l4), ('Multiscale CAN', 'Single scale CAN','Ground Truth'),loc='lower center',ncol=3)
+    fig.legend((l2, l3, l1), ('Multiscale CAN', 'Single scale CAN','Ground Truth'),loc='lower center',ncol=3)
     plt.savefig(f'./Results/Kitti/KittiSinglevsMulti_{index}.png')
 
-# plotKittiGT_singlevsMulti(0)
+plotKittiGT_singlevsMulti(0)
 
 
 
