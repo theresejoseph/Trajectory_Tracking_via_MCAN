@@ -24,6 +24,7 @@ plt.style.use(['science','ieee'])
 def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
     #scaleType = Single or Multi; 
     #City = Berlin or Japan or Brisbane or NewYork;
+    ATE=[]
     if City=='Berlin':
         length=18
         outfilePart='./Datasets/CityScaleSimulatorVelocities/Berlin/BerlineEnvPath'
@@ -97,7 +98,7 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
             np.random.seed(i*randomSeedVariation)
             vel=np.random.uniform(0,20,len(x_grid)) 
             dist=np.sum(vel)
-            print(errorTwoCoordinateLists(x_integ, y_integ,x_grid,y_grid))
+            ATE.append(errorTwoCoordinateLists(x_integ, y_integ,x_grid,y_grid)/dist)
 
             '''color dictionary'''
             color={'Multi': 'm-', 'Single': 'b-'}
@@ -106,23 +107,94 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
             l1,=axs[i].plot(x_grid,y_grid, color[scaleType],label=f'{scaleType}scaleCAN')
             l2,=axs[i].plot(x_integ, y_integ, 'g--')
             axs[i].axis('equal')
-            
+
+        print(f'City: {City}, Scale Type: {scaleType}, mean = {np.average(ATE)}, std = {np.std(ATE)}')     
         plt.subplots_adjust(bottom=0.1)
         plt.subplots_adjust(top=0.93)
         fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="lower center", ncol=2)
         plt.savefig(savepath)
+
+
+def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
+    #scaleType = Single or Multi; 
+    ATE=[]
+    pathfile=f'./Results/Kitti/CAN_Experiment_Output_{scaleType}/TestingTracksfromGTpose_'
+    savepath=f'./Results/Kitti/TestingTracksfromGTpose_{scaleType}scale.png'
+
+    if run==True:
+        for index in range(length):
+            if index==10:
+                velFile=f'./Datasets/kittiVelocities/kittiVels_{index}.npy'
+            else: 
+                velFile=f'./Datasets/kittiVelocities/kittiVels_0{index}.npy'
+            vel,angVel=np.load(velFile)
+
+            if scaleType=='Multi':
+                scales=[0.25,1,4,16]
+                numNeurons=100
+            elif scaleType=='Single':
+                scales=[1]
+                numNeurons=200
+
+            if len(vel)<1000:
+                test_length=len(vel)
+            else:
+                test_length=1000
+            test_length=len(vel)
+
+            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', N=numNeurons,printing=False)
+            print(f'Finished vels {index}')
+    
+    if plotting==True:
+        fig, axs = plt.subplots(4,3,figsize=(4, 4))
+        fig.legend([f'{scaleType}scaleCAN', 'Grid'])
+        fig.tight_layout(pad=1)
+        fig.suptitle(f'{scaleType}scale Trajectory Tracking for KittiGT_poses with CAN')
+        axs=axs.ravel()
+        for i in range(length):
+            '''load vels'''
+            if i==10:
+                velFile=f'./Datasets/kittiVelocities/kittiVels_{i}.npy'
+            else: 
+                velFile=f'./Datasets/kittiVelocities/kittiVels_0{i}.npy'
+            vel,angVel=np.load(velFile)
+
+            '''error'''
+            x_grid,y_grid,x_integ, y_integ, x_integ_err, y_integ_err = np.load(pathfile+f'{i}.npy')
+
+            ATE.append(errorTwoCoordinateLists(x_integ, y_integ,x_grid,y_grid)/np.sum(vel))
+
+            '''color dictionary'''
+            color={'Multi': 'm-', 'Single': 'b-'}
+
+            '''plot'''
+            l1,=axs[i].plot(x_grid,y_grid, color[scaleType],label=f'{scaleType}scaleCAN')
+            l2,=axs[i].plot(x_integ, y_integ, 'g--')
+            axs[i].axis('equal')
+
+        print(f'City: Kitti, Scale Type: {scaleType}, mean = {np.average(ATE)}, std = {np.std(ATE)}')       
+        plt.subplots_adjust(bottom=0.1)
+        plt.subplots_adjust(top=0.93)
+        fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="lower center", ncol=2)
+        plt.savefig(savepath)
+
+
 
 scaleType='Single'
 runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
 runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
 runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
 runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
+
+print('')
 
 scaleType='Multi'
 runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
 runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
 runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
 runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
 
 
 ''' Multi versus Single over Large Velocity Range'''
@@ -274,61 +346,6 @@ def data_processing(index):
 #     data_processing(f'0{i}')
 # data_processing('10')
 
-def runningAllPathsFromKittiGT(length, scaleType, run=False, plotting=False):
-    #scaleType = Single or Multi; 
-    
-    pathfile=f'./Results/Kitti/CAN_Experiment_Output_{scaleType}/TestingTracksfromGTpose_'
-    savepath=f'./Results/Kitti/TestingTracksfromGTpose_{scaleType}scale.png'
-
-    if run==True:
-        for index in range(length):
-            if index==10:
-                velFile=f'./Datasets/kittiVelocities/kittiVels_{index}.npy'
-            else: 
-                velFile=f'./Datasets/kittiVelocities/kittiVels_0{index}.npy'
-            vel,angVel=np.load(velFile)
-
-            if scaleType=='Multi':
-                scales=[0.25,1,4,16]
-                numNeurons=100
-            elif scaleType=='Single':
-                scales=[1]
-                numNeurons=200
-
-            if len(vel)<1000:
-                test_length=len(vel)
-            else:
-                test_length=1000
-            test_length=len(vel)
-
-            headDirectionAndPlaceNoWrapNet(scales, vel, angVel,pathfile+f'{index}.npy', N=numNeurons,printing=False)
-            print(f'Finished vels {index}')
-    
-    if plotting==True:
-        fig, axs = plt.subplots(4,3,figsize=(4, 4))
-        fig.legend([f'{scaleType}scaleCAN', 'Grid'])
-        fig.tight_layout(pad=1)
-        fig.suptitle(f'{scaleType}scale Trajectory Tracking for KittiGT_poses with CAN')
-        axs=axs.ravel()
-        for i in range(length):
-            '''error'''
-            x_grid,y_grid,x_integ, y_integ, x_integ_err, y_integ_err = np.load(pathfile+f'{i}.npy')
-
-            '''color dictionary'''
-            color={'Multi': 'm-', 'Single': 'b-'}
-
-            '''plot'''
-            l1,=axs[i].plot(x_grid,y_grid, color[scaleType],label=f'{scaleType}scaleCAN')
-            l2,=axs[i].plot(x_integ, y_integ, 'g--')
-            axs[i].axis('equal')
-            
-        plt.subplots_adjust(bottom=0.1)
-        plt.subplots_adjust(top=0.93)
-        fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="lower center", ncol=2)
-        plt.savefig(savepath)
-
-runningAllPathsFromKittiGT(11, 'Multi', run=True, plotting=True)
-runningAllPathsFromKittiGT(11, 'Single', run=True, plotting=True)
 
 
 def plotKittiGT_singlevsMulti(index):
