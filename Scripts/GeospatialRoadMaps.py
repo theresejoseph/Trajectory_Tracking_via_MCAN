@@ -72,10 +72,10 @@ def saveRoadMap(shp_path, savePath, center,n):
     # plt.show()
 
 '''berlin'''
-# center = [52.520008,13.404954]
-# shp_path ='./data/Geospatial/Berlin/gis_osm_roads_free_1.shp' 
-# savePath='./results/TestEnvironmentFiles/TestingMaps/berlin_5kmrad_1Line_300pdi.png'
-# saveRoadMap(shp_path, savePath, center,5)
+center = [52.520008,13.404954]
+shp_path ='./Datasets/CityScaleSimulatorMaps/Berlin/gis_osm_roads_free_1.shp' 
+savePath='./Datasets/CityScaleSimulatorMaps/berlin_5kmrad_0.2Line_100pdi.png'
+saveRoadMap(shp_path, savePath, center,5)
 
 '''brisbane'''
 # center = [-27.470125, 153.021072]
