@@ -8,8 +8,8 @@ import multiprocessing
 from multiprocessing import freeze_support
 from functools import partial
 import logging
-plt.style.use(['science', 'no-latex'])
-
+# plt.style.use(['science', 'no-latex'])
+plt.style.use(['science','ieee'])
 
 def headDirectionFitness(angVel,genome):
     N=360
@@ -288,21 +288,28 @@ def plotAllGA():
         mean_2=np.array([np.mean(fit) for fit in data[:,:,-1]])
         std_2=np.array([np.std(fit) for fit in data[:,:,-1]])
 
-    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(4, 2),sharey='row')
+    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(3.6, 2.2),sharey='row')
     plt.tight_layout()
     x1 = np.arange(len(mean_1))
-    ax1.plot(x1, mean_1, 'g-')
+    l1,=ax1.plot(x1, mean_1, 'g-')
     ax1.fill_between(x1, mean_1 - std_1, mean_1 + std_1, color='g', alpha=0.2)
     ax1.set_xlabel('Generations')
     ax1.set_ylabel('Fitness [-SAD]')
-    ax1.set_title('1D Network Tuning')
+    # ax1.set_title('1D Network Tuning')
 
     x2 = np.arange(len(mean_2))
-    ax2.plot(x2, mean_2, color='teal')
+    l2,=ax2.plot(x2, mean_2, color='teal')
     ax2.fill_between(x2, mean_2 - std_2, mean_2 + std_2, color='teal', alpha=0.2)
     ax2.set_xlabel('Generations')
-    ax2.set_title('2D Network Tuning')
-    plt.savefig('./Results/GA_Experiment_Output/1D_2D_NetworkTuning.pdf')
+    # ax2.set_title('2D Network Tuning')
+    ax1.tick_params(axis='x', labelsize=6)
+    ax1.tick_params(axis='y', labelsize=6)
+    ax2.tick_params(axis='x', labelsize=6)
+    ax2.tick_params(axis='y', labelsize=6)
+    ax1.ticklabel_format(axis='both', style='sci', scilimits=(-1000,1000))
+    fig.legend((l1, l2),('1D Network Tuning','2D Network Tuning'),loc='upper center', bbox_to_anchor=(0.5,1.05),ncol=2, columnspacing=5.5)
+    plt.savefig('./Results/GA_Experiment_Output/1D_2D_NetworkTuning.png')
+    plt.savefig('./Results/PaperFigures/8_1D_2D_NetworkTuning.pdf')
 
 
 if __name__ == '__main__':
