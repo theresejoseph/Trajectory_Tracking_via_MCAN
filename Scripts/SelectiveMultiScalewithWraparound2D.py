@@ -122,7 +122,7 @@ def runningAllPathsFromACity(City, scaleType, run=False, plotting=False):
         print(f'City: {City}, Scale Type: {scaleType}, mean = {np.average(ATE)}, std = {np.std(ATE)}')     
         # plt.subplots_adjust(bottom=0.1)
         plt.subplots_adjust(top=0.93)
-        fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="upper center", ncol=2, bbox_to_anchor=(0.5,1.03),prop={'size': 12})
+        fig.legend((l1, l2), (f'{scaleType}scale CAN', 'Ground Truth'),loc="upper center", ncol=2, bbox_to_anchor=(0.5,1.0),prop={'size': 10})
         plt.savefig(savepath)
         plt.savefig(savepath2)
 
@@ -249,11 +249,11 @@ def mutliVs_single(filepath, index, desiredTestLength, run=False, plotting=False
 
     if plotting==True:
         # plt.figure(figsize=(2.7,2))
-        fig,ax = plt.subplots(1,1,figsize=(3.6, 2.2))
-        fig.tight_layout(pad=3)
+        fig,ax = plt.subplots(1,1,figsize=(2.8, 2.2))
+        # fig.tight_layout(pad=3)
         singleErrors, multipleErrors = zip(*np.load(filepath))
-        ax.plot(singleErrors, 'b')
-        ax.plot(multipleErrors, 'm')
+        ax.plot(np.arange(20),singleErrors, 'b')
+        ax.plot(np.arange(20),multipleErrors, 'm')
         # plt.legend(['Single-scale', 'Multiscale'])
         ax.set_xlabel('\# Trajectory')
         ax.set_ylabel('ATE [m] ')
@@ -261,8 +261,8 @@ def mutliVs_single(filepath, index, desiredTestLength, run=False, plotting=False
         # plt.tight_layout()
         ax.tick_params(axis='x', labelsize=6)
         ax.tick_params(axis='y', labelsize=6)
-        plt.subplots_adjust(left=0.1, right=0.75)
-        fig.legend(('Single scale','Multiscale'),loc='upper center', bbox_to_anchor=(0.4,0.98),ncol=2, prop={'size': 8})
+        # plt.subplots_adjust(left=0.1, right=0.75)
+        fig.legend(('Single scale','Multiscale'),loc='upper center', bbox_to_anchor=(0.5,1.03),ncol=2, prop={'size': 8})
         plt.savefig(f'./Results/Berlin/MultivsSingleErrors_Path{index}.png')
         plt.savefig(f'./Results/PaperFigures/3_MultivsSingleErrors_Path{index}.pdf')
 
@@ -308,7 +308,7 @@ def CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=Fal
         ax2.tick_params(axis='x', labelsize=6)
         ax2.tick_params(axis='y', labelsize=6)
         
-        fig.legend(('Single scale','Multiscale'),loc='upper center', bbox_to_anchor=(0.5,1.03),ncol=2, columnspacing=7)
+        fig.legend(('Single scale','Multiscale'),loc='upper center', bbox_to_anchor=(0.5,1.03),ncol=2, columnspacing=7, prop={'size': 8})
         plt.savefig('./Results/Berlin/CumalitiveError_Path1_SinglevsMulti.png')
         plt.savefig(f'./Results/PaperFigures/6_CumalitiveError_Path1_SinglevsMulti.pdf')
 
@@ -326,7 +326,7 @@ def plotMultiplePathsErrorDistribution():
     pathfileMulti=f'./Results/Berlin/CAN_Experiment_Output_Multi/TestingTrackswithSpeeds0to20_Path'
 
 
-    fig,axs = plt.subplots(1,1,figsize=(3.6, 2.2)) 
+    fig,axs = plt.subplots(1,1,figsize=(2.7, 1.9)) 
     errorSingle,erroMulti=[],[]
     for i in range(length):
         x_grid,y_grid,x_integ, y_integ, x_integ_err, y_integ_err = np.load(pathfileSingle+f'{i}.npy')
@@ -346,7 +346,7 @@ def plotMultiplePathsErrorDistribution():
     axs.tick_params(axis='x', labelsize=7)
     axs.tick_params(axis='y', labelsize=7)
     # axs.set_title('ATE within 18 Trajectories through Berlin')
-    fig.legend(('Single scale','Multiscale'),loc='upper center', bbox_to_anchor=(0.5,1.03),ncol=2)
+    fig.legend(('Single scale','Multiscale'),loc='upper center', bbox_to_anchor=(0.5,0.98),ncol=2, prop={'size': 7})
     savepath=f'./Results/Berlin/LocalSegmentError_AllPaths_SinglevsMulti.png'
     plt.savefig(savepath)
     plt.savefig(f'./Results/PaperFigures/7_LocalSegmentError_AllPaths_SinglevsMulti.pdf')
