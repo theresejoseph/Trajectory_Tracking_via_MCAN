@@ -6,5 +6,5 @@ This repository is an implementation of the paper 'Trajectory Tracking via Multi
 
 
 
- <video loop src="./Results/PaperFigures/PathFollowing.mp4">  video </video> 
+![image info](./Results/PaperFigures/BerlinPathFollowing.gif)
 <!-- ![image info](./Results/Kitti/KittiSinglevsMulti_0.png) -->
