@@ -77,6 +77,7 @@ shp_path ='./Datasets/CityScaleSimulatorMaps/Berlin/gis_osm_roads_free_1.shp'
 savePath='./Datasets/CityScaleSimulatorMaps/berlin_5kmrad_0.2Line_100pdi.png'
 saveRoadMap(shp_path, savePath, center,5)
 
+# The data files             for the remaining cities (other than berlin) can be dowloaded from OpenStreetMaps. These are not included in this repository due to file size. 
 '''brisbane'''
 # center = [-27.470125, 153.021072]
 # shp_path ='./data/Geospatial/Brisbane/gis_osm_roads_free_1.shp' 
