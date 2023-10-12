@@ -15,6 +15,7 @@ import matplotlib.patches as mpatches
 from matplotlib_scalebar.scalebar import ScaleBar
 import numpy as np
 
+# The loading of open street maps files is taken and modified from: https://github.com/theptyza/map_street_designations
 
 def saveRoadMap(shp_path, savePath, center,n):
     roads_berlin = GeoDataFrame.from_file(shp_path, encoding='utf-8')
