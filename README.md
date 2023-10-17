@@ -13,3 +13,11 @@ The simulator extracts road network data from Open Street Maps to generate an oc
 3. The script CAN.py is a library of methods defining the dynamics of the attractor network (1D and 2D), the position decoding from the network state and the multiscale network implementation 
 4. The script SimpleGA_multiscale_dynamics.py is an implementation of a genetic algorithm that determines the CAN network parameters for accurate trajectory tracking 
 5. The script SelectiveMultiScalewithWraparound2D includes all the experiments described in the paper using the simulated and kitti dataset information
+
+
+**Citation:** If you find this code useful in your research or project, please consider citing the following paper:
+
+"Trajectory Tracking via Multiscale Continuous Attractor Networks"
+
+*Author(s): Therese Joseph, Tobias Fischer, Michael Milford*
+*Published in: IEEE/RSJ International Conference on Intelligent Robots and Systems 2023*
