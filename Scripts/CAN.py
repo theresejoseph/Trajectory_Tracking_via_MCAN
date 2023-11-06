@@ -12,6 +12,7 @@ from matplotlib.colors import ListedColormap
 from matplotlib.artist import Artist
 from mpl_toolkits.mplot3d import Axes3D 
 
+from tqdm import tqdm
 
 
 '''CAN networks'''
@@ -20,7 +21,7 @@ class attractorNetwork:
     along with inhitory and excitatory connections to update the weights'''
     def __init__(self, N, num_links, excite_radius, activity_mag,inhibit_scale):
         self.excite_radius=excite_radius
-        self.N=N  
+        self.N=N
         self.num_links=num_links
         self.activity_mag=activity_mag
         self.inhibit_scale=inhibit_scale
@@ -110,6 +111,7 @@ class attractorNetwork2D:
         self.num_links=int(num_links)
         self.N1=N1
         self.N2=N2  
+        self.N=(N1,N2)
         self.activity_mag=activity_mag
         self.inhibit_scale=inhibit_scale
 
@@ -554,7 +556,9 @@ def headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath, printing=False,
     
 
     '''_______________________________Iterating through simulation velocities_______________________________'''
-    for i in range(1,len(vel)):   
+    # for i in range(1,len(vel)):   
+    tbar = tqdm(range(1,len(vel)))
+    for i in tbar:
         '''Path integration'''
         q[2]+=angVel[i]
         q[0],q[1]=q[0]+vel[i]*np.cos(q[2]), q[1]+vel[i]*np.sin(q[2])

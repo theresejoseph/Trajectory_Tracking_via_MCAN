@@ -14,9 +14,11 @@ from scipy import ndimage
 import time 
 from os import listdir
 import sys
+
+from tqdm import tqdm
 sys.path.append('./scripts')
 from CAN import headDirectionAndPlaceNoWrapNet, pathIntegration, errorTwoCoordinateLists
-plt.style.use(['science','ieee'])
+# plt.style.use(['science','ieee'])
 # plt.style.use(['science','no-latex'])
 
 
@@ -210,14 +212,14 @@ scaleType='Single'
 # runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
 # runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
 # runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
-# runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
+runningAllPathsFromKittiGT(11, scaleType, run=True, plotting=True)
 print('')
 scaleType='Multi'
 # runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
 # runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
 # runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
-runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
-# runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
+# runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
+runningAllPathsFromKittiGT(11, scaleType, run=True, plotting=True)
 
 
 ''' Multi versus Single over Large Velocity Range'''
