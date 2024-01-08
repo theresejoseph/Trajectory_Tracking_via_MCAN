@@ -12,6 +12,7 @@ from matplotlib.colors import ListedColormap
 from matplotlib.artist import Artist
 from mpl_toolkits.mplot3d import Axes3D 
 
+from tqdm import tqdm
 
 
 '''CAN networks'''
@@ -20,7 +21,7 @@ class attractorNetwork:
     along with inhitory and excitatory connections to update the weights'''
     def __init__(self, N, num_links, excite_radius, activity_mag,inhibit_scale):
         self.excite_radius=excite_radius
-        self.N=N  
+        self.N=N
         self.num_links=num_links
         self.activity_mag=activity_mag
         self.inhibit_scale=inhibit_scale
@@ -110,6 +111,7 @@ class attractorNetwork2D:
         self.num_links=int(num_links)
         self.N1=N1
         self.N2=N2  
+        self.N=(N1,N2)
         self.activity_mag=activity_mag
         self.inhibit_scale=inhibit_scale
 
@@ -124,22 +126,18 @@ class attractorNetwork2D:
         ''' constant inhibition scaled by amount of active neurons'''
         return np.sum(weights[weights>0]*self.inhibit_scale)
 
-    def excitations(self,idx,idy,scale=1):
-        '''A scaled 2D gaussian with excite radius is created at given neruon position with wraparound '''
-        
-        excite_rowvals=[] #wrap around row values 
-        excite_colvals=[] #wrap around column values 
-        for i in range(-self.excite_radius,self.excite_radius+1):
-            excite_rowvals.append((idx + i) % self.N1)
-            excite_colvals.append((idy + i) % self.N2)
-         
+    def excitations(self, idx, idy, scale=1):
+        '''A scaled 2D gaussian with excite radius is created at given neuron position with wraparound '''
 
-        gauss=self.full_weights(self.excite_radius)# 2D gaussian scaled 
-        excite=np.zeros((self.N1,self.N2)) # empty excite array 
-        for i,r in enumerate(excite_rowvals):
-            for j,c in enumerate(excite_colvals):
-                excite[r,c]=gauss[i,j]
-        return excite*scale 
+        excite_rowvals = np.arange(-self.excite_radius, self.excite_radius+1)
+        excite_colvals = np.arange(-self.excite_radius, self.excite_radius+1)
+        excite_rowvals = (idx + excite_rowvals) % self.N[0]
+        excite_colvals = (idy + excite_colvals) % self.N[1]
+
+        gauss = self.full_weights(self.excite_radius)  # 2D gaussian scaled
+        excite = np.zeros((self.N[0], self.N[1]))  # empty excite array
+        excite[excite_rowvals[:, None], excite_colvals] = gauss
+        return excite * scale
 
     def neuron_activation(self,idx,idy):
         '''A scaled 2D gaussian with excite radius is created at given neruon position with wraparound '''
@@ -190,32 +188,21 @@ class attractorNetwork2D:
         else:
             return full_shift
     
-    def fractional_shift(self, M,delta_row,delta_col):
-        M_row, M_col = np.zeros((self.N1, self.N2)), np.zeros((self.N1, self.N2))
-        
-        mysign=lambda x: 1 if x > 0 else -1
-        whole_shift_row, whole_shift_col = np.floor(delta_row), np.floor(delta_col)
-        frac_row, frac_col=delta_row%1,delta_col%1
-        inv_frac_row, inv_frac_col=[1-(delta_row%1),1-(delta_col%1)]
+    def fractional_shift(self, M, delta_row, delta_col):
+        M_new=np.zeros((self.N[0], self.N[1]))
+        axiss=[1,0]
+        for idx, delta in enumerate([delta_col,delta_row]):
+            
+            frac = delta % 1
+            if frac == 0.0:
+                M_new=M
+                continue
+            
+            shift= 1 if delta > 0 else -1
+            frac = frac if delta > 0 else (1-frac)
+            M_new += (1 - frac) * M + frac * np.roll(M, shift, axis=axiss[idx])
 
-        for i in range(self.N1):
-            for j in range(self.N2):
-                # M_row[int((i+whole_shift_row)%self.N1),j]=inv_frac_row*prev_weights[int((i+whole_shift_row)%self.N1),j] + frac_row*prev_weights[int((i+whole_shift_row+mysign(frac_row))%self.N1), j]
-                # M_col[i,int((j+whole_shift_col)%self.N2)]=inv_frac_col*prev_weights[i,int((j+whole_shift_col)%self.N2)] + frac_col*prev_weights[i,int((j+whole_shift_col+mysign(frac_col))%self.N2)]
-                if frac_row == 0.0:
-                    M_row=M
-                elif delta_row>0:
-                    M_row[i,j]=(1-frac_row)*M[i,j] + frac_row*M[int((i-1)%self.N1), j]
-                else:
-                    M_row[i,j]=(frac_row)*M[i,j] + (1-frac_row)*M[int((i+1)%self.N1), j]
-
-                if frac_col == 0.0:
-                    M_col=M
-                elif delta_col>0:    
-                    M_col[i,j]=(1-frac_col)*M[i,j] + frac_col*M[i,int((j-1)%self.N2)]
-                else:
-                    M_col[i,j]=(frac_col)*M[i,j] + (1-frac_col)*M[i,int((j+1)%self.N2)]
-        return (M_row+M_col) /np.linalg.norm((M_row+M_col))
+        return M_new / (np.linalg.norm(M_new))
  
     def update_weights_dynamics_row_col(self,prev_weights, delta_row, delta_col):
         non_zero_rows, non_zero_cols=np.nonzero(prev_weights) # indexes of non zero prev_weights
@@ -569,7 +556,9 @@ def headDirectionAndPlaceNoWrapNet(scales, vel, angVel,savePath, printing=False,
     
 
     '''_______________________________Iterating through simulation velocities_______________________________'''
-    for i in range(1,len(vel)):   
+    # for i in range(1,len(vel)):   
+    tbar = tqdm(range(1,len(vel)))
+    for i in tbar:
         '''Path integration'''
         q[2]+=angVel[i]
         q[0],q[1]=q[0]+vel[i]*np.cos(q[2]), q[1]+vel[i]*np.sin(q[2])
