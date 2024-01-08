@@ -216,10 +216,10 @@ runningAllPathsFromKittiGT(11, scaleType, run=True, plotting=True)
 print('')
 scaleType='Multi'
 # runningAllPathsFromACity('Japan', scaleType, run=False, plotting=True)
-# runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
+runningAllPathsFromACity('NewYork', scaleType, run=False, plotting=True)
 # runningAllPathsFromACity('Brisbane', scaleType,run=False, plotting=True)
 # runningAllPathsFromACity('Berlin', scaleType, run=False, plotting=True)
-runningAllPathsFromKittiGT(11, scaleType, run=True, plotting=True)
+# runningAllPathsFromKittiGT(11, scaleType, run=False, plotting=True)
 
 
 ''' Multi versus Single over Large Velocity Range'''
@@ -268,9 +268,9 @@ def mutliVs_single(filepath, index, desiredTestLength, run=False, plotting=False
         plt.savefig(f'./Results/Berlin/MultivsSingleErrors_Path{index}.png')
         plt.savefig(f'./Results/PaperFigures/3_MultivsSingleErrors_Path{index}.pdf')
 
-index=0
-filepath=f'./Results/Berlin/MultivsSingleErrors_Path{index}.npy'
-mutliVs_single(filepath, index, 500, run=False, plotting=True) 
+# index=0
+# filepath=f'./Results/Berlin/MultivsSingleErrors_Path{index}.npy'
+# mutliVs_single(filepath, index, 500, run=False, plotting=True) 
 
 
 
@@ -317,7 +317,7 @@ def CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=Fal
 
 singlePath='./Results/Berlin/CumalativeError_Path1_SingleScale.npy'
 multiPath='./Results/Berlin/CumalativeError_Path1_MultiScale.npy'
-CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=True)
+# CumalativeError_SinglevsMulti(singlePath, multiPath, run=False, plotting=True)
 
 
 
@@ -354,7 +354,7 @@ def plotMultiplePathsErrorDistribution():
     plt.savefig(f'./Results/PaperFigures/7_LocalSegmentError_AllPaths_SinglevsMulti.pdf')
 
 
-plotMultiplePathsErrorDistribution()
+# plotMultiplePathsErrorDistribution()
 
 
 
@@ -416,7 +416,7 @@ def plotKittiGT_singlevsMulti(index):
     plt.savefig(f'./Results/Kitti/KittiSinglevsMulti_{index}.png')
     plt.savefig(f'./Results/PaperFigures/2_KittiSinglevsMulti_{index}.pdf')
 
-plotKittiGT_singlevsMulti(0)
+# plotKittiGT_singlevsMulti(0)
 
 
 

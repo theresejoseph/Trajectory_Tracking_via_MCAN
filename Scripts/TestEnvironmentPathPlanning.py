@@ -18,8 +18,10 @@ from numpy.typing import ArrayLike
 from easy_trilateration.model import *  
 from easy_trilateration.least_squares import easy_least_squares  
 from easy_trilateration.graph import * 
-# import timeout_decorator #pip install timeout-decorator
-# @timeout_decorator.timeout(60) 
+import signal 
+timeout_duration = 60 # Set the timeout duration (in seconds) for path generation
+
+#Bicycyle Motion model taken and modified from: https://github.com/winstxnhdw/KinematicBicycleModel
 
 
 def processMap(map_path, scale_percent):
@@ -44,6 +46,12 @@ def processMap(map_path, scale_percent):
     
     return img, imgColor, imgdia, binMap
 
+    # Define a function to handle the timeout
+
+
+def handle_timeout(signum, frame):
+    raise TimeoutError("Method execution timed out")
+
 
 def findPathsthroughRandomPoints(img,num_locations, outfile):
     free_spaces=[]
@@ -55,23 +63,28 @@ def findPathsthroughRandomPoints(img,num_locations, outfile):
     locations=random.choices(free_spaces, k=num_locations)
     print(locations)
 
+    signal.signal(signal.SIGALRM, signal.SIG_DFL)
     paths=[]
     for i in range(len(locations)-1):
+        signal.signal(signal.SIGALRM, handle_timeout)
+        signal.alarm(timeout_duration)
         try:
             dx = DistanceTransformPlanner(img, goal=locations[i+1], distance="euclidean")
             dx.plan()
             path=dx.query(start=locations[i])
-        except TimeoutError:
-            # locations.append(free_spaces, k=1)
+            signal.alarm(0)  # Disable the timeout
+            print(f"Path generation for location {i+1} completed within 60 seconds")
+        except TimeoutError as e:
             print('removed a goal')
             continue
+
         paths.append(path)
         print(f"done {i+1} paths")
-    
-    # outfile='./results/testEnvMultiplePathsSeparate_5kmrad_100pdi_0.2line.npy'
-    np.save(outfile,np.array(paths))
+ 
+        np.save(outfile,np.array(paths, dtype=object))
 
     print(paths)
+    signal.signal(signal.SIGALRM, signal.SIG_DFL)
 
 
 def remove_consecutive_duplicates(coords):
@@ -334,34 +347,13 @@ class Vehicle:
         trueCarPos.append(tuple((self.x,  self.y)))
 
 
-def rangeSensor(currentPos, landmarks, angleRange, maxDist):
-    lndMrkRange = []
-    for (x,y) in landmarks:
-        theta = math.atan((currentPos[1]-y)/(currentPos[0]-x))
-        dist = math.sqrt((x-currentPos[0]) ** 2 + (y-currentPos[1]) ** 2)
-        
-        # if theta > angleRange[0] and theta < angleRange[1]:
-        if dist < maxDist:
-            # print(theta, dist)
-            lndMrkRange.append([dist, theta, x, y])
-
-    return lndMrkRange
-
-
-def noVisualisationDrive(path_x, path_y,outfile,frames=1000):
+def noVisualisationDrive(path_x, path_y, outfile, frames=1000):
     global velocity, angVel, trueCarPos
     # Storage Variables
     velocity=[]
     angVel=[]
     trueCarPos=[]
-    ranges=[]
-    trilatEstimate=[]
     
-    num_landmarks=80
-    xLndMks = np.random.randint(0, np.shape(path_img)[1], num_landmarks)
-    yLndMks = np.random.randint(0, np.shape(path_img)[0], num_landmarks)
-    landmarks=list(zip(xLndMks, yLndMks))
-
     # car object
     dt=0.05
     car  = Vehicle(path_x, path_y,100, dt, control_gain=5, softening_gain=0.05, yaw_rate_gain=0.5, 
@@ -371,26 +363,11 @@ def noVisualisationDrive(path_x, path_y,outfile,frames=1000):
         # Drive and draw car
         if (car.px[car.target_id], car.py[car.target_id]) !=(car.px[-1], car.py[-1]):
             car.drive()
-           
-            '''Landmarks'''
-            curr_lndMrksRange=rangeSensor([car.x, car.y], landmarks, [car.yaw-np.deg2rad(60), car.yaw+np.deg2rad(60)], 200)
-            ranges.append(curr_lndMrksRange)
-            
-            if len(curr_lndMrksRange)>= 4:
-                distances,angles=zip(*[(range[0],range[1]) for range in curr_lndMrksRange])
-                x,y=zip(*[(range[2],range[3]) for range in curr_lndMrksRange])
-                trilat=[Circle(x[i], y[i], distances[i]) for i in range(len(x))]
-                result, meta = easy_least_squares(trilat)  
-                trilatEstimate.append(( result.center.x, result.center.y))
-                print(car.x, car.y, result.center.x, result.center.y)
- 
         else:
             car.v=0
     
-    # outfile=f'./results/TestEnvironmentFiles/TraverseInfo/BerlinEnvPathLandmark{path_idx}.npz'
     start=np.array([path_x[0], path_y[0],car.start_heading])
-    # np.savez(outfile,speeds=velocity, angVel=angVel, truePos= trueCarPos, startPose=start)
-    np.savez(outfile,speeds=velocity, angVel=angVel, truePos= trueCarPos, startPose=start, landmarks=landmarks, ranges= np.array(ranges), trilat=np.array(trilatEstimate))
+    np.savez(outfile,speeds=velocity, angVel=angVel, truePos= trueCarPos, startPose=start)
     
         
 def runSimulation(path_x, path_y, path_img):
@@ -486,42 +463,36 @@ def pathIntegration(speed, angVel, startPose):
     return x_integ, y_integ
 
 
-'''Initialising Image'''
-# map_path = './Datasets/CityScaleSimulatorMaps/berlin_5kmrad_0.2Line_100pdi.png'
-map_path = './Datasets/CityScaleSimulatorMaps/japan_5kmrad_1Line_300pdi.png'
-# map_path = './Datasets/CityScaleSimulatorMaps/newyork_5kmrad_1Line_300pdi.png'
-# map_path = './Datasets/CityScaleSimulatorMaps/brisbane_5kmrad_1Line_300pdi.png'
-img=np.array(Image.open(map_path).convert("L"))
+'''Generating a Dataset for All Cities'''
+##################### Initialising Map Image #####################
+map_image = './Datasets/CityScaleSimulatorMaps/berlin_5kmrad_0.2Line_100dpi.png'
+map_image = './Datasets/CityScaleSimulatorMaps/tokyo_5kmrad_1Line_100dpi.png'
+map_image = './Datasets/CityScaleSimulatorMaps/newyork_5kmrad_1Line_100dpi.png'
+map_image = './Datasets/CityScaleSimulatorMaps/brisbane_5kmrad_1Line_100dpi.png'
 
-meterWidth=5000
+img=np.array(Image.open(map_image).convert("L"))
+meterWidth=5000 #width in meters 
 pxlPerMeter= img.shape[0]/meterWidth
-
 img[img<255]= 0 
 img[img==255]=1
 
 
-'''Generate Paths'''
+##################### -------------- Generating Paths between random locations on the map -------------- #####################
 # num_locations=20
-# findPathsthroughRandomPoints(img,num_locations)
-pathfile='./Datasets/CityScaleSimulatorMaps/japan_5kmrad_300pdi_1line.npy'
-findPathsthroughRandomPoints(img,20,pathfile)
-
-pathfile='./Datasets/CityScaleSimulatorMaps/newyork_5kmrad_300pdi_1line.npy'
-findPathsthroughRandomPoints(img,20,pathfile)
-
-
-pathfile='./Datasets/CityScaleSimulatorMaps/brisbane_5kmrad_300pdi_1line.npy'
-findPathsthroughRandomPoints(img,20,pathfile)
-
-'''Original'''
-# pathfile='./results/TestEnvironmentFiles/Paths/testEnvPath1_5kmrad_100pdi_0.2line.npy'
-# pathfile='./results/TestEnvironmentFiles/Paths/testEnvMultiplePaths1_5kmrad_100pdi_0.2line.npy'
-# pathfile='./results/TestEnvironmentFiles/Paths/testEnvMultiplePathsSeparate_5kmrad_100pdi_0.2line.npy'
+pathfile='./Datasets/CityScaleSimulatorPaths/berlin_5kmrad_0.2line.npy'
+# findPathsthroughRandomPoints(img,num_locations, pathfile)
+pathfile='./Datasets/CityScaleSimulatorPaths/tokyo_5kmrad_1line.npy'
+# findPathsthroughRandomPoints(img,20,pathfile)
+pathfile='./Datasets/CityScaleSimulatorPaths/newyork_5kmrad_1line.npy'
+# findPathsthroughRandomPoints(img,20,pathfile)
+pathfile='./Datasets/CityScaleSimulatorPaths/brisbane_5kmrad_1line.npy'
+# findPathsthroughRandomPoints(img,20,pathfile)
 
 
 
-'''Scaled'''
+##################### -------------- Scaling path (if neccessary) -------------- #####################
 
+# The path generated from the map can be scaled up or down to elongate or shorten the traverses for experimentation
 # print(f"scaled width{np.shape(path_img)[0], np.shape(path_img)[1]}, pxlPerMeter{np.shape(path_img)[0]/meterWidth, np.shape(path_img)[1]/meterWidth}")
 # path= remove_consecutive_duplicates(list(zip(path_x, path_y)))
 
@@ -531,33 +502,62 @@ findPathsthroughRandomPoints(img,20,pathfile)
 # plt.grid('off')
 # plt.show()
 
-'''Run Simulation'''
-# runSimulation(path_x, path_y, path_img)
+##################### -------------- Running Simulation (using kinematics motion model to extract car velocities) -------------- #####################
 
-paths=np.load(pathfile)
-for i in range(len(paths)-1):
-    scale=1
-    path_x, path_y, path_img, currentPxlPerMeter= rescalePath(paths, i, img, scale, pxlPerMeter)
-    noVisualisationDrive(path_x, path_y, f'./results/TestEnvironmentFiles/TraverseInfo/Japan{i}.npz', frames=len(path_x)*3)
+# runSimulation(path_x, path_y, path_img) # simulation with visualisation 
 
 # paths=np.load(pathfile)
-# scale,index=1,0
-# path_x, path_y, path_img, currentPxlPerMeter= rescalePath(paths, index, img, scale, pxlPerMeter)
-# noVisualisationDrive(path_x, path_y, index, frames=len(path_x)*3)
+# for i in range(len(paths)-1):
+#     scale=1
+#     path_x, path_y, path_img, currentPxlPerMeter= rescalePath(paths, i, img, scale, pxlPerMeter)
+#     noVisualisationDrive(path_x, path_y, f'../Datasets/CityScaleSimulatorVelocities/Brisbane/Brisbane{i}.npz', frames=len(path_x)*3) # simulation without visualisation 
 
-'''Test Stored Traverse'''
-# index = 10
-# path_x, path_y=zip(*paths[index])
-# outfile=f'./results/TestEnvironmentFiles/TraverseInfo/BerlineEnvPath{index}.npz'
-# traverseInfo=np.load(outfile, allow_pickle=True)
-# speeds,angVel,truePos, startPose=traverseInfo['speeds'], traverseInfo['angVel'], traverseInfo['truePos'], traverseInfo['startPose']
 
-# x_integ,y_integ=pathIntegration(speeds, angVel, startPose)
-# x,y=zip(*truePos)
 
-# plt.plot(x_integ,y_integ, 'g.-')
-# plt.plot(x, y, 'b--')
-# plt.plot(path_x, path_y, 'r--')
-# plt.axis('equal')
-# plt.legend(['Integrated Position','True Position', 'Berlin Path'])
-# plt.show()
+
+'''Testing City scale simulator'''
+##################### -------------- 1. Creating an occupancy map from map image  -------------- #####################
+map_image = './Datasets/CityScaleSimulatorMaps/newyork_5kmrad_1Line_100dpi.png'
+img=np.array(Image.open(map_image).convert("L"))
+img[img<255]= 0 
+img[img==255]=1
+
+
+
+##################### -------------- 2. Finding paths between random points on the map  -------------- #####################
+pathfile='./Datasets/CityScaleSimulatorPaths/Test.npy'
+# findPathsthroughRandomPoints(img,10,pathfile)
+
+
+
+##################### -------------- 3. Using kinematics motion model to drive along generated path, and storing velocities  -------------- #####################
+paths=np.load(pathfile,allow_pickle=True)
+for i in range(len(paths)-1):
+    path_x, path_y=zip(*paths[i])
+    noVisualisationDrive(path_x, path_y, f'./Datasets/CityScaleSimulatorVelocities/Test/TestPath{i}.npz', frames=len(path_x)*3)
+
+
+
+##################### -------------- 4. Testing the simualator by visualising proposed path, simulated path and integrated path   -------------- #####################
+numPath=len(paths)
+figcols=3
+figrows=int(np.ceil(numPath/figcols))
+
+fig, ax = plt.subplots(figrows,figcols,figsize=(7, 7))
+axs=ax.ravel()
+for i in range(numPath-1):
+    path_x, path_y=zip(*paths[i])
+
+    outfile=f'Datasets/CityScaleSimulatorVelocities/Test/TestPath{i}.npz'
+    traverseInfo=np.load(outfile, allow_pickle=True)
+    speeds,angVel,truePos, startPose=traverseInfo['speeds'], traverseInfo['angVel'], traverseInfo['truePos'], traverseInfo['startPose']
+
+    x_integ,y_integ=pathIntegration(speeds, angVel, startPose)
+    x,y=zip(*truePos)
+
+    axs[i].plot(x_integ,y_integ, 'g.-')
+    axs[i].plot(x, y, 'b--')
+    axs[i].plot(path_x, path_y, 'r--')
+    axs[i].axis('equal')
+    # axs[i].legend(['Integrated Path','Proposed Path from Map', 'Simulated Path'])
+plt.show()
